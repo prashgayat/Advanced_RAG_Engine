@@ -1,59 +1,84 @@
-# retriever/retriever_utils.py
-
 import os
 import faiss
 import pickle
-from sklearn.feature_extraction.text import TfidfVectorizer
-from typing import List, Tuple
-from sentence_transformers import SentenceTransformer
 import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+from langchain.vectorstores import FAISS
+from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain.docstore.document import Document
 
 class HybridRetriever:
-    def __init__(self, embedding_model_name="all-MiniLM-L6-v2"):
-        self.vectorizer = TfidfVectorizer()
-        self.embedding_model = SentenceTransformer(embedding_model_name)
+    def __init__(self, faiss_index_path=None, tfidf_vectorizer_path=None, documents=None):
         self.faiss_index = None
-        self.embeddings = None
-        self.text_chunks = []
+        self.tfidf_vectorizer = None
+        self.documents = documents or []
+        self.openai_embeddings = OpenAIEmbeddings()
 
-    def build_index(self, chunks: List[str]):
-        self.text_chunks = chunks
+        if faiss_index_path and os.path.exists(faiss_index_path):
+            self._load_faiss_index(faiss_index_path)
+        
+        if tfidf_vectorizer_path and os.path.exists(tfidf_vectorizer_path):
+            self._load_tfidf_vectorizer(tfidf_vectorizer_path)
 
-        # TF-IDF for keyword search
-        self.vectorizer.fit(chunks)
+    def _load_faiss_index(self, faiss_index_path):
+        with open(faiss_index_path, "rb") as f:
+            self.faiss_index = pickle.load(f)
 
-        # Embeddings for FAISS
-        self.embeddings = self.embedding_model.encode(chunks, show_progress_bar=False)
-        dimension = self.embeddings.shape[1]
-        self.faiss_index = faiss.IndexFlatL2(dimension)
-        self.faiss_index.add(self.embeddings)
+    def _load_tfidf_vectorizer(self, tfidf_vectorizer_path):
+        with open(tfidf_vectorizer_path, "rb") as f:
+            self.tfidf_vectorizer = pickle.load(f)
 
-    def save_index(self, path: str):
-        faiss.write_index(self.faiss_index, os.path.join(path, "faiss.index"))
-        with open(os.path.join(path, "retriever_data.pkl"), "wb") as f:
-            pickle.dump({
-                "chunks": self.text_chunks,
-                "vectorizer": self.vectorizer
-            }, f)
+    def _build_faiss_index(self, texts):
+        embeddings = self.openai_embeddings.embed_documents(texts)
+        dimension = len(embeddings[0])
+        index = faiss.IndexFlatL2(dimension)
+        index.add(np.array(embeddings, dtype=np.float32))
+        self.faiss_index = index
 
-    def load_index(self, path: str):
-        self.faiss_index = faiss.read_index(os.path.join(path, "faiss.index"))
-        with open(os.path.join(path, "retriever_data.pkl"), "rb") as f:
-            data = pickle.load(f)
-            self.text_chunks = data["chunks"]
-            self.vectorizer = data["vectorizer"]
-            self.embeddings = self.embedding_model.encode(self.text_chunks)
+    def _build_tfidf_vectorizer(self, texts):
+        vectorizer = TfidfVectorizer()
+        vectorizer.fit(texts)
+        self.tfidf_vectorizer = vectorizer
 
-    def retrieve(self, query: str, top_k: int = 5) -> List[Tuple[str, float]]:
-        # Semantic
-        query_vector = self.embedding_model.encode([query])
-        _, faiss_indices = self.faiss_index.search(query_vector, top_k)
-        semantic_results = [(self.text_chunks[i], 1.0) for i in faiss_indices[0]]
+    def save_faiss_index(self, faiss_index_path):
+        with open(faiss_index_path, "wb") as f:
+            pickle.dump(self.faiss_index, f)
 
-        # Keyword
-        tfidf_vec = self.vectorizer.transform([query])
-        tfidf_scores = np.dot(tfidf_vec, self.vectorizer.transform(self.text_chunks).T).toarray().flatten()
-        keyword_indices = tfidf_scores.argsort()[::-1][:top_k]
-        keyword_results = [(self.text_chunks[i], tfidf_scores[i]) for i in keyword_indices]
+    def save_tfidf_vectorizer(self, tfidf_vectorizer_path):
+        with open(tfidf_vectorizer_path, "wb") as f:
+            pickle.dump(self.tfidf_vectorizer, f)
 
-        return semantic_results + keyword_results
+    def build_indexes(self, texts):
+        self._build_faiss_index(texts)
+        self._build_tfidf_vectorizer(texts)
+
+    def retrieve(self, query, top_k=5):
+        faiss_results = self._retrieve_faiss(query, top_k)
+        tfidf_results = self._retrieve_tfidf(query, top_k)
+        combined_results = self._combine_results(faiss_results, tfidf_results)
+        return combined_results
+
+    def _retrieve_faiss(self, query, top_k):
+        if self.faiss_index is None:
+            return []
+        query_embedding = self.openai_embeddings.embed_query(query)
+        D, I = self.faiss_index.search(np.array([query_embedding], dtype=np.float32), top_k)
+        return [self.documents[i] for i in I[0] if i < len(self.documents)]
+
+    def _retrieve_tfidf(self, query, top_k):
+        if self.tfidf_vectorizer is None:
+            return []
+        query_vec = self.tfidf_vectorizer.transform([query])
+        doc_vecs = self.tfidf_vectorizer.transform([doc.page_content for doc in self.documents])
+        scores = (doc_vecs * query_vec.T).toarray()
+        ranked_indices = np.argsort(scores.flatten())[::-1]
+        return [self.documents[i] for i in ranked_indices[:top_k] if i < len(self.documents)]
+
+    def _combine_results(self, faiss_results, tfidf_results):
+        seen = set()
+        combined = []
+        for doc in faiss_results + tfidf_results:
+            if doc.page_content not in seen:
+                combined.append(doc)
+                seen.add(doc.page_content)
+        return combined
