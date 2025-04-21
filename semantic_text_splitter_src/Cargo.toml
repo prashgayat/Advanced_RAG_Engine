@@ -1,0 +1,15 @@
+
+[package]
+name = "semantic_text_splitter"
+version = "0.25.1"
+edition = "2021"
+
+[dependencies]
+pyo3 = { version = "0.18.0", features = ["extension-module"] }
+tokenizers = "0.13.3"
+
+[lib]
+crate-type = ["cdylib"]
+
+[package.metadata.maturin]
+name = "semantic_text_splitter.semantic_text_splitter"

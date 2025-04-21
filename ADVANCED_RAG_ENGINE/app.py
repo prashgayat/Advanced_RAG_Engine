@@ -1,5 +1,6 @@
 import streamlit as st
 from utils.file_utils import save_uploaded_file, load_file_content
+from splitter.HybridTextSplitter import HybridTextSplitter  # Import this
 
 st.set_page_config(page_title="Advanced Semantic RAG Engine 🚀", page_icon="🧠")
 
@@ -31,8 +32,17 @@ if uploaded_files:
         try:
             file_content, file_type = load_file_content(saved_path)
             st.info(f"📄 Loaded {file_type.upper()} file successfully! ({len(file_content)} characters)")
+
+            # ✨ Now split using HybridTextSplitter
+            splitter = HybridTextSplitter(
+                keywords=["Introduction", "Chapter", "Section", "Summary"],  # Customize as needed
+                chunk_size=500
+            )
+            chunks = splitter.split_text(file_content)
+            st.success(f"🔵 Text split into {len(chunks)} semantic+keyword chunks.")
+
         except Exception as e:
-            st.error(f"❌ Failed to load {uploaded_file.name}: {str(e)}")
+            st.error(f"❌ Failed to process {uploaded_file.name}: {str(e)}")
 
 else:
     st.info("👈 Please upload documents from the sidebar to proceed.")

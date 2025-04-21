@@ -1,0 +1,11 @@
+/workspaces/Advanced_RAG_Engine/semantic_text_splitter_src/target/release/deps/libxattr-12972049ec65d336.rmeta: /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.5.0/src/lib.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.5.0/src/error.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.5.0/src/sys/mod.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.5.0/src/util.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.5.0/src/sys/linux_macos.rs
+
+/workspaces/Advanced_RAG_Engine/semantic_text_splitter_src/target/release/deps/libxattr-12972049ec65d336.rlib: /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.5.0/src/lib.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.5.0/src/error.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.5.0/src/sys/mod.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.5.0/src/util.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.5.0/src/sys/linux_macos.rs
+
+/workspaces/Advanced_RAG_Engine/semantic_text_splitter_src/target/release/deps/xattr-12972049ec65d336.d: /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.5.0/src/lib.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.5.0/src/error.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.5.0/src/sys/mod.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.5.0/src/util.rs /home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.5.0/src/sys/linux_macos.rs
+
+/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.5.0/src/lib.rs:
+/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.5.0/src/error.rs:
+/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.5.0/src/sys/mod.rs:
+/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.5.0/src/util.rs:
+/home/codespace/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/xattr-1.5.0/src/sys/linux_macos.rs:
