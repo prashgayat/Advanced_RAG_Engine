@@ -1,0 +1,15 @@
+# Core Libraries
+streamlit
+openai
+faiss-cpu
+scikit-learn
+PyPDF2
+python-docx
+pandas
+python-dotenv
+semantic-text-splitter==0.25.1
+
+# Install Instructions:
+# After downloading, run the following command in your terminal:
+# 
+# pip install -r requirements.txt
