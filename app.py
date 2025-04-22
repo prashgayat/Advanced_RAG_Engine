@@ -1,3 +1,5 @@
+# app.py
+
 # Load environment variables automatically
 from utils.env_loader import load_environment
 load_environment()
@@ -9,7 +11,8 @@ from retriever.retriever_utils import hybrid_retriever
 from memory.memory_manager import MemoryManager
 from dotenv import load_dotenv
 from utils.fallback_utils import detect_no_retrieval, fallback_menu, execute_fallback_action
-from utils.llm_answer import llm_answer  # Lightweight import at top now
+from llm_answer import llm_answer  # ✅ CORRECTED import (NO utils.)
+
 load_dotenv()
 
 st.set_page_config(page_title="Advanced Semantic RAG Engine", page_icon="🧠")

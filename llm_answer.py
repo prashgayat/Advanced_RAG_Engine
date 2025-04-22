@@ -4,6 +4,7 @@ import os
 from openai import OpenAI
 from dotenv import load_dotenv
 from prompts.prompt_templates import context_qa_prompt_template
+from utils.fallback_utils import generate_fallback_response  # ✅ added fallback import
 
 # Load environment variables
 load_dotenv()
@@ -23,7 +24,7 @@ def llm_answer(question: str, documents: list) -> str:
         str: The generated answer or fallback message.
     """
     if not documents:
-        return "🤔 Sorry, no relevant documents were found to answer your question."
+        return generate_fallback_response(no_docs=True)  # 🛡️ Unified fallback for no documents
 
     # Prepare context from retrieved documents
     context = "\n\n".join(documents)
@@ -47,4 +48,4 @@ def llm_answer(question: str, documents: list) -> str:
 
     except Exception as e:
         print(f"❗ Error generating answer: {e}")
-        return "⚠️ Sorry, something went wrong while generating the answer."
+        return generate_fallback_response(error=True)  # 🛡️ Unified fallback for OpenAI error

@@ -1,13 +1,14 @@
-# Core Libraries
 streamlit
-openai
 faiss-cpu
-scikit-learn
-PyPDF2
-python-docx
-pandas
+openai
 python-dotenv
 semantic-text-splitter==0.25.1
+scikit-learn
+langchain==0.3.23
+langchain-community==0.3.21
+tiktoken
+numpy
+
 
 # Install Instructions:
 # After downloading, run the following command in your terminal:

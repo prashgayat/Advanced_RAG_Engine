@@ -5,7 +5,7 @@ import faiss
 import pickle
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
-from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain_community.embeddings import OpenAIEmbeddings  # ✅ updated for latest langchain
 from langchain.docstore.document import Document
 
 class HybridRetriever:
@@ -93,3 +93,14 @@ class HybridRetriever:
             if len(combined) >= top_k:
                 break
         return combined
+
+# === Hybrid Retriever Adapter for app.py ===
+def hybrid_retriever(query, chunks, top_k=5):
+    """
+    Quick adapter function to instantiate HybridRetriever and fetch results.
+    """
+    docs = [Document(page_content=chunk) for chunk in chunks]
+    retriever = HybridRetriever(documents=docs)
+    retriever.build_indexes([doc.page_content for doc in docs])
+    results = retriever.retrieve(query, top_k=top_k)
+    return [doc.page_content for doc in results]

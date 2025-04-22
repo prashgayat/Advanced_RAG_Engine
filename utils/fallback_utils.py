@@ -41,3 +41,26 @@ def execute_fallback_action(option, user_query, llm):
 
     else:
         return "❓ Unknown option selected. Please choose again."
+
+
+def generate_fallback_response(no_docs=False, error=False, error_message="") -> str:
+    """
+    Generates a fallback response for missing documents or LLM call errors.
+
+    Args:
+        no_docs (bool): No documents were retrieved.
+        error (bool): OpenAI API or LLM call failed.
+        error_message (str): Detailed error if available.
+
+    Returns:
+        str: A polite fallback response message.
+    """
+    if no_docs:
+        return (
+            "🤔 Sorry, I couldn't find enough information to confidently answer your question "
+            "based on the available documents. Could you please try rephrasing or asking something else?"
+        )
+    if error:
+        return f"⚠️ Oops! Something went wrong: {error_message}\nPlease try rephrasing your question or ask something else!"
+
+    return "⚠️ An unexpected error occurred. Please try again."
