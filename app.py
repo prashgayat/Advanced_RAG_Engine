@@ -1,6 +1,7 @@
 # Load environment variables automatically
 from utils.env_loader import load_environment
 load_environment()
+
 import streamlit as st
 from utils.file_utils import save_uploaded_file, load_file_content
 from splitter.HybridTextSplitter import HybridTextSplitter
@@ -56,7 +57,7 @@ if uploaded_files:
     for uploaded_file in uploaded_files:
         try:
             file_path = save_uploaded_file(uploaded_file)
-            file_content, _ = load_file_content(file_path)  # small fix here too
+            file_content, _ = load_file_content(file_path)
 
             # 🎯 Auto-adapt keywords based on filename
             your_keywords_list = infer_keywords_from_filename(uploaded_file.name)
@@ -85,11 +86,18 @@ if user_query:
     st.session_state.memory.add_user_message(user_query)
 
     try:
-        response = hybrid_retriever(
+        retrieved_chunks = hybrid_retriever(
             query=user_query,
             chunks=st.session_state.chunks
         )
-        answer = response if response else "🤔 Sorry, I could not find an exact answer in the uploaded documents."
+
+        from utils.llm_answer import llm_answer  # ⬅️ Correct lightweight import
+
+        answer = llm_answer(
+            question=user_query,
+            documents=retrieved_chunks
+        )
+
     except Exception as e:
         answer = f"⚠️ An error occurred: {str(e)}"
 

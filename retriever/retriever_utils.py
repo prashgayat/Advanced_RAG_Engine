@@ -1,9 +1,10 @@
+# retriever/retriever_utils.py
+
 import os
 import faiss
 import pickle
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
-from langchain.vectorstores import FAISS
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.docstore.document import Document
 
@@ -55,7 +56,7 @@ class HybridRetriever:
     def retrieve(self, query, top_k=5):
         faiss_results = self._retrieve_faiss(query, top_k)
         tfidf_results = self._retrieve_tfidf(query, top_k)
-        combined_results = self._combine_results(faiss_results, tfidf_results)
+        combined_results = self._combine_results(faiss_results, tfidf_results, top_k)
         return combined_results
 
     def _retrieve_faiss(self, query, top_k):
@@ -63,7 +64,11 @@ class HybridRetriever:
             return []
         query_embedding = self.openai_embeddings.embed_query(query)
         D, I = self.faiss_index.search(np.array([query_embedding], dtype=np.float32), top_k)
-        return [self.documents[i] for i in I[0] if i < len(self.documents)]
+        results = []
+        for idx in I[0]:
+            if idx != -1 and idx < len(self.documents):
+                results.append(self.documents[idx])
+        return results
 
     def _retrieve_tfidf(self, query, top_k):
         if self.tfidf_vectorizer is None:
@@ -72,13 +77,19 @@ class HybridRetriever:
         doc_vecs = self.tfidf_vectorizer.transform([doc.page_content for doc in self.documents])
         scores = (doc_vecs * query_vec.T).toarray()
         ranked_indices = np.argsort(scores.flatten())[::-1]
-        return [self.documents[i] for i in ranked_indices[:top_k] if i < len(self.documents)]
+        results = []
+        for idx in ranked_indices[:top_k]:
+            if idx < len(self.documents):
+                results.append(self.documents[idx])
+        return results
 
-    def _combine_results(self, faiss_results, tfidf_results):
+    def _combine_results(self, faiss_results, tfidf_results, top_k):
         seen = set()
         combined = []
         for doc in faiss_results + tfidf_results:
             if doc.page_content not in seen:
                 combined.append(doc)
                 seen.add(doc.page_content)
+            if len(combined) >= top_k:
+                break
         return combined
