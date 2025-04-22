@@ -2,22 +2,32 @@
 
 class MemoryManager:
     """
-    Simple memory manager to store and retrieve chat history per session.
+    Memory manager to store and retrieve chat history.
     """
 
     def __init__(self):
-        self.sessions = {}
+        self.history = []
 
-    def get_memory(self, session_id):
+    def add_user_message(self, message):
         """
-        Get chat history for a given session.
+        Add a message from the user to history.
         """
-        return self.sessions.get(session_id, [])
+        self.history.append(("user", message))
 
-    def save_turn(self, session_id, user_input, assistant_response):
+    def add_assistant_message(self, message):
         """
-        Save a new turn (question + answer) into session history.
+        Add a message from the assistant to history.
         """
-        if session_id not in self.sessions:
-            self.sessions[session_id] = []
-        self.sessions[session_id].append((user_input, assistant_response))
+        self.history.append(("assistant", message))
+
+    def get_history(self):
+        """
+        Retrieve the full conversation history.
+        """
+        return self.history
+
+    def clear(self):
+        """
+        Clear the entire conversation history.
+        """
+        self.history = []

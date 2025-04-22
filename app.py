@@ -8,6 +8,8 @@ from splitter.HybridTextSplitter import HybridTextSplitter
 from retriever.retriever_utils import hybrid_retriever
 from memory.memory_manager import MemoryManager
 from dotenv import load_dotenv
+from utils.fallback_utils import detect_no_retrieval, fallback_menu, execute_fallback_action
+from utils.llm_answer import llm_answer  # Lightweight import at top now
 load_dotenv()
 
 st.set_page_config(page_title="Advanced Semantic RAG Engine", page_icon="🧠")
@@ -17,7 +19,6 @@ st.subheader("Built for robust ingestion and advanced semantic retrieval 🚀")
 # --- Auto-adaptive keyword function ---
 def infer_keywords_from_filename(filename: str) -> list:
     filename = filename.lower()
-
     if "insurance" in filename:
         return ["Policy", "Premium", "Coverage", "Risk", "Claim", "Underwriting", "Exclusions"]
     elif "real estate" in filename or "property" in filename:
@@ -42,7 +43,9 @@ if st.sidebar.button("🧹 Reset Conversation"):
     st.sidebar.success("🧹 Conversation and chunks cleared!")
 
 uploaded_files = st.sidebar.file_uploader(
-    "Choose multiple files (PDF, DOCX, TXT, XLSX)", type=["pdf", "docx", "txt", "xlsx"], accept_multiple_files=True
+    "Choose multiple files (PDF, DOCX, TXT, XLSX)", 
+    type=["pdf", "docx", "txt", "xlsx"], 
+    accept_multiple_files=True
 )
 
 # --- Initialize memory and chunks ---
@@ -59,10 +62,7 @@ if uploaded_files:
             file_path = save_uploaded_file(uploaded_file)
             file_content, _ = load_file_content(file_path)
 
-            # 🎯 Auto-adapt keywords based on filename
             your_keywords_list = infer_keywords_from_filename(uploaded_file.name)
-
-            # 🧠 Create splitter with dynamic keywords
             splitter = HybridTextSplitter(keywords=your_keywords_list, chunk_size=500)
 
             chunks = splitter.split_text(file_content)
@@ -91,18 +91,34 @@ if user_query:
             chunks=st.session_state.chunks
         )
 
-        from utils.llm_answer import llm_answer  # ⬅️ Correct lightweight import
+        # 🛡️ NEW FALLBACK LOGIC STARTS HERE
+        if detect_no_retrieval(retrieved_chunks):
+            st.warning(fallback_menu(user_query))
+            fallback_option = st.radio("Fallback options:", [
+                "Retry your question",
+                "Ask OpenAI directly",
+                "Upload a new document"
+            ])
 
-        answer = llm_answer(
-            question=user_query,
-            documents=retrieved_chunks
-        )
+            if st.button("Proceed with selected option"):
+                fallback_response = execute_fallback_action(fallback_option, user_query, llm_answer)
+                st.success(fallback_response)
+                st.session_state.memory.add_assistant_message(fallback_response)
+                st.chat_message("assistant").markdown(fallback_response)
+
+        else:
+            # 🧠 Standard RAG answering flow
+            answer = llm_answer(
+                question=user_query,
+                documents=retrieved_chunks
+            )
+            st.session_state.memory.add_assistant_message(answer)
+            st.chat_message("assistant").markdown(answer)
 
     except Exception as e:
         answer = f"⚠️ An error occurred: {str(e)}"
-
-    st.session_state.memory.add_assistant_message(answer)
-    st.chat_message("assistant").markdown(answer)
+        st.session_state.memory.add_assistant_message(answer)
+        st.chat_message("assistant").markdown(answer)
 
 # --- Footer ---
 st.markdown("---")

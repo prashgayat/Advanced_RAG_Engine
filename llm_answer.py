@@ -3,6 +3,7 @@
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
+from prompts.prompt_templates import context_qa_prompt_template
 
 # Load environment variables
 load_dotenv()
@@ -22,30 +23,20 @@ def llm_answer(question: str, documents: list) -> str:
         str: The generated answer or fallback message.
     """
     if not documents:
-        return "🤔 Sorry, I could not find relevant information to answer your question."
+        return "🤔 Sorry, no relevant documents were found to answer your question."
 
     # Prepare context from retrieved documents
     context = "\n\n".join(documents)
 
-    # Prepare prompt
-    prompt = f"""You are an expert knowledge assistant.
-
-Answer the following question based **only** on the given context.
-
-Context:
-{context}
-
-Question:
-{question}
-
-Answer:"""
+    # Use structured prompt template
+    prompt = context_qa_prompt_template.format(context=context, question=question)
 
     try:
         # Call the OpenAI model
         response = openai_client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant specialized in answering based strictly on provided context."},
+                {"role": "system", "content": "You are a helpful assistant. Answer only from the provided context."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.2,
