@@ -1,0 +1,9 @@
+credentials:
+  usernames:
+    admin:
+      name: Admin
+      password: "<paste_the_new_hash_here>"
+cookie:
+  name: rag_app
+  key: auth
+  expiry_days: 1
